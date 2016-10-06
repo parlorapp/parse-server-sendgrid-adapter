@@ -4,7 +4,8 @@
   "description": "Simple sendgrid adapter for parse server",
   "main": "index.js",
   "dependencies": {
-    "sendgrid": "^4.5.0"
+    "sendgrid": "^4.5.0",
+    "email-validator": "^1.0.7"
   },
   "keywords": [
     "parse-server",

@@ -2,6 +2,7 @@
 
 var _sendgrid = require('sendgrid');
 var _helper = require('sendgrid').mail;
+var validator = require("email-validator");
 
 function checkSuppression(sg, suppression, email, callback)
 {
@@ -19,18 +20,24 @@ function checkSuppression(sg, suppression, email, callback)
 
 function checkInvalidEmail(sg, email, callback)
 {
-    checkSuppression(sg, 'invalid_emails' , email, function(result, email)
+    if (validator.validate(email))
     {
-        if (result)
+        checkSuppression(sg, 'invalid_emails' , email, function(result, email)
         {
-            checkSuppression(sg, 'bounces', email, function(result, email)
+            if (result)
             {
+                checkSuppression(sg, 'bounces', email, function(result, email)
+                {
+                    callback(result);
+                });
+            } else {
                 callback(result);
-            });
-        } else {
-            callback(result);
-        }
-    });
+            }
+        });
+    } else {
+        console.log("Stopped my email validator: " + email);
+        callback(false);
+    }
 }
 
 function sendEmail(sg, from, to, subject, text, callback)
