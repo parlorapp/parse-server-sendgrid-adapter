@@ -20,22 +20,27 @@ function checkSuppression(sg, suppression, email, callback)
 
 function checkInvalidEmail(sg, email, callback)
 {
-    if (validator.validate(email))
+    try
     {
-        checkSuppression(sg, 'invalid_emails' , email, function(result, email)
+        if (validator.validate(email))
         {
-            if (result)
+            checkSuppression(sg, 'invalid_emails' , email, function(result, email)
             {
-                checkSuppression(sg, 'bounces', email, function(result, email)
+                if (result)
                 {
+                    checkSuppression(sg, 'bounces', email, function(result, email)
+                    {
+                        callback(result);
+                    });
+                } else {
                     callback(result);
-                });
-            } else {
-                callback(result);
-            }
-        });
-    } else {
-        console.log("Stopped my email validator: " + email);
+                }
+            });
+        } else {
+            console.log("Stopped my email validator: " + email);
+            callback(false);
+        }
+    } catch (err) {
         callback(false);
     }
 }

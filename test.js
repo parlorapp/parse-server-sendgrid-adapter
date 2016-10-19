@@ -5,5 +5,5 @@ var adapter = SimpleSendGridAdapter({
     fromAddress: 'Parlor <password@parlor.me>',
   });
 
-var ref = {"to": "brian@openstatic.org", "subject": "Hello Wolrd", "text": "Something to say"};
+var ref = {"to": "brian@parlor.me", "subject": "Test", "text": "Disregard this email"};
 adapter.sendMail(ref);

@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "sendgrid": "^4.5.0",
-    "email-validator": "^1.0.7"
+    "email-existence": "^0.1.5"
   },
   "keywords": [
     "parse-server",
