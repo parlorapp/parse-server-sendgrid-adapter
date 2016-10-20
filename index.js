@@ -12,9 +12,14 @@ function checkSuppression(sg, suppression, email, callback)
     console.log("Testing Email: " + path);
     request.path = path;
     sg.API(request, function (error, response) {
-      var jsonresp = JSON.parse(response.body);
-      var result = (jsonresp.length == 0);
-      callback(result, email);
+      try
+      {
+          var jsonresp = JSON.parse(response.body);
+          var result = (jsonresp.length == 0);
+          callback(result, email);
+      } catch (err) {
+          callback(false, email);
+      }
     });
 }
 
