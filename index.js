@@ -14,6 +14,7 @@ function checkSuppression(sg, suppression, email, callback)
     sg.API(request, function (error, response) {
       try
       {
+          console.log("MailAdapter Respone from suppression check " + suppression + " : " + response.body);
           var jsonresp = JSON.parse(response.body);
           var result = (jsonresp.length == 0);
           callback(result, email);
