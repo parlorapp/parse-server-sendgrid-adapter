@@ -14,10 +14,16 @@ function checkSuppression(sg, suppression, email, callback)
     sg.API(request, function (error, response) {
       try
       {
-          console.log("MailAdapter Respone from suppression check " + suppression + " : " + response.body);
-          var jsonresp = JSON.parse(response.body);
-          var result = (jsonresp.length == 0);
-          callback(result, email);
+          var resp_body = response.body
+          console.log("MailAdapter Respone from suppression check " + suppression + " : " + resp_body);
+          if (resp_body.length > 0)
+          {
+              var jsonresp = JSON.parse(response.body);
+              var result = (jsonresp.length == 0);
+              callback(result, email);
+          } else {
+              callback(true, email);
+          }
       } catch (err) {
           console.log("Mail Adapter Error - " + err);
           callback(false, email);
