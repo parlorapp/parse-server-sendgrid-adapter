@@ -18,6 +18,7 @@ function checkSuppression(sg, suppression, email, callback)
           var result = (jsonresp.length == 0);
           callback(result, email);
       } catch (err) {
+          console.log("Mail Adapter Error - " + err);
           callback(false, email);
       }
     });
@@ -35,14 +36,19 @@ function checkInvalidEmail(sg, email, callback)
                 {
                     checkSuppression(sg, 'bounces', email, function(result, email)
                     {
+                        if (!result)
+                        {
+                            console.log("Stopped by checkSuppression bounces: " + email);
+                        }
                         callback(result);
                     });
                 } else {
+                    console.log("Stopped by checkSuppression invalid_emails: " + email);
                     callback(result);
                 }
             });
         } else {
-            console.log("Stopped my email validator: " + email);
+            console.log("Stopped by email validator: " + email);
             callback(false);
         }
     } catch (err) {
