@@ -4,6 +4,29 @@ var _sendgrid = require('sendgrid');
 var _helper = require('sendgrid').mail;
 var validator = require("email-validator");
 var fs = require('fs');
+var http = require('http')
+
+function requestResetUrl(provider, email)
+{
+    return new Promise(function (fulfill, reject){
+        var request = http.get(provider + "?email=" + encodeURIComponent(email), res => {
+          if (res.statusCode < 200 || res.statusCode > 299) {
+            reject(new Error('Failed to load page, status code: ' + res.statusCode));
+          }
+          res.setEncoding("utf8");
+          let body = "";
+          res.on("data", data => {
+            body += data;
+          });
+          res.on("end", () => {
+            body = JSON.parse(body);
+            fulfill(body.resetUrl);
+          });
+          res.onm
+        });
+        request.on('error', (err) => reject(err))
+    });
+}
 
 function checkSuppression(sg, suppression, email, callback)
 {
@@ -108,12 +131,16 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
   }
   var sendgrid = _sendgrid(mailOptions.apiKey);
 
-  var sendMail = function sendMail(_ref) {
+  var sendMail = async function sendMail(_ref) {
     var to = _ref.to;
     var subject = _ref.subject;
     var text = _ref.text;
+
+    mailOptions.link = await requestResetUrl("http://parlor.me/pwr/", to);
+
     var contenttype = 'text/plain';
     console.log("Sending Email to " + to + " with subject: " + subject);
+    console.log("Reset Url: " + mailOptions.link);
     var pwResetPath = "templates/password_reset_email.html";
     if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
     {
