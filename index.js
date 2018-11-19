@@ -142,14 +142,14 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     }
 
     var contenttype = 'text/plain';
-    console.log("Sending Email to " + to + " with subject: " + subject);
+    //console.log("Sending Email to " + to + " with subject: " + subject);
     console.log("Reset Url: " + mailOptions.link);
     var pwResetPath = "templates/password_reset_email.html";
     if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
     {
         contenttype = "text/html";
         text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
-        console.log("Loaded custom password reset " + text);
+        //console.log("Loaded custom password reset " + text);
     }
 
     return new Promise(function (resolve, reject) {
