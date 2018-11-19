@@ -131,14 +131,14 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
   }
   var sendgrid = _sendgrid(mailOptions.apiKey);
 
-  var sendMail = async function sendMail(_ref) {
+  var sendMail = function sendMail(_ref) {
     var to = _ref.to;
     var subject = _ref.subject;
     var text = _ref.text;
 
     if (mailOptions.resetProvider)
     {
-        mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
+        //mailOptions.link = requestResetUrl(mailOptions.resetProvider, to);
     }
 
     var contenttype = 'text/plain';
