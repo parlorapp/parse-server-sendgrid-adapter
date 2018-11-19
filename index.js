@@ -3,19 +3,20 @@
 var _sendgrid = require('sendgrid');
 var _helper = require('sendgrid').mail;
 var validator = require("email-validator");
+var fs = require('fs');
 
 function checkSuppression(sg, suppression, email, callback)
 {
     var request = sg.emptyRequest();
     request.method = 'GET';
     var path = '/v3/suppression/' + suppression + '/' + encodeURIComponent(email);
-    console.log("Testing Email: " + path);
+    console.log("parse-server-sendgrid-adapter: Testing Email " + path);
     request.path = path;
     sg.API(request, function (error, response) {
       try
       {
           var resp_body = response.body
-          console.log("MailAdapter Respone from suppression check " + suppression + " : " + resp_body);
+          console.log("parse-server-sendgrid-adapter: Respone from suppression check " + suppression + " : " + resp_body);
           if (resp_body.length > 0)
           {
               var jsonresp = JSON.parse(response.body);
@@ -25,7 +26,7 @@ function checkSuppression(sg, suppression, email, callback)
               callback(true, email);
           }
       } catch (err) {
-          console.log("Mail Adapter Error - " + err);
+          console.log("parse-server-sendgrid-adapter: Error - " + err);
           callback(false, email);
       }
     });
@@ -45,17 +46,17 @@ function checkInvalidEmail(sg, email, callback)
                     {
                         if (!result)
                         {
-                            console.log("Stopped by checkSuppression bounces: " + email);
+                            console.log("parse-server-sendgrid-adapter: Stopped by checkSuppression bounces " + email);
                         }
                         callback(result);
                     });
                 } else {
-                    console.log("Stopped by checkSuppression invalid_emails: " + email);
+                    console.log("parse-server-sendgrid-adapter: Stopped by checkSuppression invalid_emails " + email);
                     callback(result);
                 }
             });
         } else {
-            console.log("Stopped by email validator: " + email);
+            console.log("parse-server-sendgrid-adapter: Stopped by email validator " + email);
             callback(false);
         }
     } catch (err) {
@@ -63,12 +64,13 @@ function checkInvalidEmail(sg, email, callback)
     }
 }
 
-function sendEmail(sg, from, to, subject, text, callback)
+function sendEmail(sg, from, to, subject, contenttype, text, callback)
 {
     var from_email = new _helper.Email(from);
     var to_email = new _helper.Email(to);
-    var content = new _helper.Content('text/plain', text);
+    var content = new _helper.Content(contenttype, text);
     var mail = new _helper.Mail(from_email, subject, to_email, content);
+    console.log("parse-server-sendgrid-adapter: Sending Email to " + to + " with subject " + subject);
     var request = sg.emptyRequest({
       method: 'POST',
       path: '/v3/mail/send',
@@ -84,6 +86,22 @@ function sendEmail(sg, from, to, subject, text, callback)
     });
 }
 
+function escapeRegExp(str)
+{
+    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+function replaceAll(str, find, replace)
+{
+    return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+}
+
+function fillVariables(text, options)
+{
+    text = replaceAll(text, "{{link}}", options.link);
+    return text;
+}
+
 var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
   if (!mailOptions || !mailOptions.apiKey || !mailOptions.fromAddress) {
     throw 'SimpleSendGridAdapter requires an API Key.';
@@ -94,23 +112,34 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     var to = _ref.to;
     var subject = _ref.subject;
     var text = _ref.text;
+    var contenttype = 'text/plain';
+    console.log("Sending Email to " + to + " with subject: " + subject);
+    var pwResetPath = "templates/password_reset_email.html";
+    if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
+    {
+        contenttype = "text/html";
+        text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
+        console.log("Loaded custom password reset " + text);
+    }
 
     return new Promise(function (resolve, reject) {
       checkInvalidEmail(sendgrid, to, function(result)
       {
          if (result)
          {
-            sendEmail(sendgrid, mailOptions.fromAddress, to, subject, text, function (err, response_body)
+            sendEmail(sendgrid, mailOptions.fromAddress, to, subject, contenttype, text, function (err, response_body)
             {
-              if (err) {
+              if (err)
+              {
+                console.log("parse-server-sendgrid-adapter: Error Sending " + err + " " + response_body);
                 reject(err);
               } else {
-                console.log("Email sent to: " + to);
+                console.log("parse-server-sendgrid-adapter: Email sent to " + to);
               }
               resolve({ "response": response_body });
             });
          } else {
-            console.log("Email not sent to: " + to);
+            console.log("parse-server-sendgrid-adapter: Email not sent to " + to);
             reject("Email not sent to: " + to);
          }
        });
