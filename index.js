@@ -136,7 +136,10 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     var subject = _ref.subject;
     var text = _ref.text;
 
-    mailOptions.link = await requestResetUrl("http://parlor.me/pwr/", to);
+    if (mailOptions.resetProvider)
+    {
+        mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
+    }
 
     var contenttype = 'text/plain';
     console.log("Sending Email to " + to + " with subject: " + subject);
