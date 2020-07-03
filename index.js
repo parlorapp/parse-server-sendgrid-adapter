@@ -135,10 +135,15 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     var to = _ref.to;
     var subject = _ref.subject;
     var text = _ref.text;
-
+    var okToSend = true;
+    
     if (mailOptions.resetProvider)
     {
         mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
+        if (mailOptions.link == "")
+        {
+            okToSend = false;
+        }
     }
 
     var contenttype = 'text/plain';
@@ -155,7 +160,7 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     return new Promise(function (resolve, reject) {
       checkInvalidEmail(sendgrid, to, function(result)
       {
-         if (result)
+         if (result && okToSend)
          {
             sendEmail(sendgrid, mailOptions.fromAddress, to, subject, contenttype, text, function (err, response_body)
             {
