@@ -175,7 +175,7 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
             });
          } else {
             console.log("parse-server-sendgrid-adapter: Email not sent to " + to);
-            reject("Email not sent to: " + to);
+            resolve({ "response": "Email not sent to " + to });
          }
        });
     });
