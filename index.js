@@ -136,25 +136,27 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     var subject = _ref.subject;
     var text = _ref.text;
     var okToSend = true;
-    
-    if (mailOptions.resetProvider)
-    {
-        mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
-        if (mailOptions.link == "")
-        {
-            okToSend = false;
-        }
-    }
 
     var contenttype = 'text/plain';
-    //console.log("Sending Email to " + to + " with subject: " + subject);
-    console.log("Reset Url: " + mailOptions.link);
+    console.log("Sending Email to " + to + " with subject: " + subject);
     var pwResetPath = "templates/password_reset_email.html";
     if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
     {
-        contenttype = "text/html";
-        text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
-        //console.log("Loaded custom password reset " + text);
+      if (mailOptions.resetProvider)
+      {
+          mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
+          if (mailOptions.link == "")
+          {
+            console.log("reset provider failed to generate link!!!");
+            okToSend = false;
+          }
+          console.log("Reset Url: " + mailOptions.link);
+      } else {
+        console.log("no reset provider!!!");
+      }
+      contenttype = "text/html";
+      text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
+      //console.log("Loaded custom password reset " + text);
     }
 
     return new Promise(function (resolve, reject) {
