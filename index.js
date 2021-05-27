@@ -4,12 +4,13 @@ var _sendgrid = require('sendgrid');
 var _helper = require('sendgrid').mail;
 var validator = require("email-validator");
 var fs = require('fs');
-var http = require('http')
+var http = require('http');
+var https = require('https');
 
 async function requestResetUrl(provider, email)
 {
-    return await new Promise(function (fulfill, reject){
-        var request = http.get(provider + "?email=" + encodeURIComponent(email), res => {
+    return await new Promise((resolve, reject) => {
+        var request = https.get(provider + "?email=" + encodeURIComponent(email), res => {
           if (res.statusCode < 200 || res.statusCode > 299) {
             reject(new Error('Failed to load page, status code: ' + res.statusCode));
           }
@@ -20,12 +21,18 @@ async function requestResetUrl(provider, email)
           });
           res.on("end", () => {
             body = JSON.parse(body);
-            fulfill(body.resetUrl);
+            console.log("Parsed Response: " + body);
+            resolve(body.resetUrl);
           });
         });
-        request.on('error', (err) => reject(err))
+        request.on('error', (err) => {
+          console.log("Rejected HTTP REQUEST: " + err);
+          reject(err);
+        });
     });
 }
+
+console.log("ANSWER: " + requestResetUrl('https://parlor.me/pwr/', 'brian@parlor.me'));
 
 function checkSuppression(sg, suppression, email, callback)
 {
@@ -143,6 +150,7 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     {
       if (mailOptions.resetProvider)
       {
+          console.log("Reset Provider: " + mailOptions.resetProvider);
           mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
           if (mailOptions.link == "")
           {
