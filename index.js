@@ -20,8 +20,8 @@ async function requestResetUrl(provider, email)
             body += data;
           });
           res.on("end", () => {
-            body = JSON.parse(body);
             console.log("Parsed Response: " + body);
+            body = JSON.parse(body);
             resolve(body.resetUrl);
           });
         });
@@ -32,7 +32,7 @@ async function requestResetUrl(provider, email)
     });
 }
 
-console.log("ANSWER: " + requestResetUrl('https://parlor.me/pwr/', 'brian@parlor.me'));
+//console.log("ANSWER: " + requestResetUrl('https://parlor.me/pwr/', 'brian@parlor.me'));
 
 function checkSuppression(sg, suppression, email, callback)
 {
