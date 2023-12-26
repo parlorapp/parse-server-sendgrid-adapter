@@ -32,7 +32,30 @@ async function requestResetUrl(provider, email)
     });
 }
 
-//console.log("ANSWER: " + requestResetUrl('https://parlor.me/pwr/', 'brian@parlor.me'));
+async function validateEmailExternal(provider, email)
+{
+    return await new Promise((resolve, reject) => {
+        var request = https.get(provider + "?email=" + encodeURIComponent(email), res => {
+          if (res.statusCode < 200 || res.statusCode > 299) {
+            reject(new Error('Failed to load page, status code: ' + res.statusCode));
+          }
+          res.setEncoding("utf8");
+          let body = "";
+          res.on("data", data => {
+            body += data;
+          });
+          res.on("end", () => {
+            console.log("Parsed Response: " + body);
+            body = JSON.parse(body);
+            resolve(body.valid);
+          });
+        });
+        request.on('error', (err) => {
+          console.log("Rejected HTTP REQUEST: " + err);
+          reject(err);
+        });
+    });
+}
 
 function checkSuppression(sg, suppression, email, callback)
 {
@@ -61,36 +84,46 @@ function checkSuppression(sg, suppression, email, callback)
     });
 }
 
-function checkInvalidEmail(sg, email, callback)
+async function checkInvalidEmail(sg, email, callback)
 {
-    try
+  if (mailOptions.hasOwnProperty('validateUrl'))
+  {
+    var valid = await validateEmailExternal(mailOptions.validateUrl, email);
+    if (!valid)
     {
-        if (validator.validate(email))
-        {
-            checkSuppression(sg, 'invalid_emails' , email, function(result, email)
-            {
-                if (result)
-                {
-                    checkSuppression(sg, 'bounces', email, function(result, email)
-                    {
-                        if (!result)
-                        {
-                            console.log("parse-server-sendgrid-adapter: Stopped by checkSuppression bounces " + email);
-                        }
-                        callback(result);
-                    });
-                } else {
-                    console.log("parse-server-sendgrid-adapter: Stopped by checkSuppression invalid_emails " + email);
-                    callback(result);
-                }
-            });
-        } else {
-            console.log("parse-server-sendgrid-adapter: Stopped by email validator " + email);
-            callback(false);
-        }
-    } catch (err) {
-        callback(false);
+      console.log("parse-server-sendgrid-adapter: Stopped by email external validator " + email);
+      callback(false);
+      return;
     }
+  }
+  try
+  {
+      if (validator.validate(email))
+      {
+          checkSuppression(sg, 'invalid_emails' , email, function(result, email)
+          {
+              if (result)
+              {
+                  checkSuppression(sg, 'bounces', email, function(result, email)
+                  {
+                      if (!result)
+                      {
+                          console.log("parse-server-sendgrid-adapter: Stopped by checkSuppression bounces " + email);
+                      }
+                      callback(result);
+                  });
+              } else {
+                  console.log("parse-server-sendgrid-adapter: Stopped by checkSuppression invalid_emails " + email);
+                  callback(result);
+              }
+          });
+      } else {
+          console.log("parse-server-sendgrid-adapter: Stopped by email validator " + email);
+          callback(false);
+      }
+  } catch (err) {
+      callback(false);
+  }
 }
 
 function sendEmail(sg, from, to, subject, contenttype, text, callback)
