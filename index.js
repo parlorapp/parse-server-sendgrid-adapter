@@ -84,9 +84,9 @@ function checkSuppression(sg, suppression, email, callback)
     });
 }
 
-async function checkInvalidEmail(sg, email, callback)
+async function checkInvalidEmail(sg, mailOptions, email, callback)
 {
-  if (mailOptions.hasOwnProperty('validateUrl'))
+  if (mailOptions.validateUrl)
   {
     var valid = await validateEmailExternal(mailOptions.validateUrl, email);
     if (!valid)
@@ -200,7 +200,7 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     }
 
     return new Promise(function (resolve, reject) {
-      checkInvalidEmail(sendgrid, to, function(result)
+      checkInvalidEmail(sendgrid, mailOptions, to, function(result)
       {
          if (result && okToSend)
          {
