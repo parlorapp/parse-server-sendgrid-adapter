@@ -175,52 +175,58 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     var subject = _ref.subject;
     var text = _ref.text;
     var okToSend = true;
-
-    var contenttype = 'text/plain';
-    console.log("Sending Email to " + to + " with subject: " + subject);
-    var pwResetPath = "templates/password_reset_email.html";
-    if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
+    if (!to.startsWith("deleted."))
     {
-      if (mailOptions.resetProvider)
+      var contenttype = 'text/plain';
+      console.log("Sending Email to " + to + " with subject: " + subject);
+      var pwResetPath = "templates/password_reset_email.html";
+      if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
       {
-          console.log("Reset Provider: " + mailOptions.resetProvider);
-          mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
-          if (mailOptions.link == "")
-          {
-            console.log("reset provider failed to generate link!!!");
-            okToSend = false;
-          }
-          console.log("Reset Url: " + mailOptions.link);
-      } else {
-        console.log("no reset provider!!!");
-      }
-      contenttype = "text/html";
-      text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
-      //console.log("Loaded custom password reset " + text);
-    }
-
-    return new Promise(function (resolve, reject) {
-      checkInvalidEmail(sendgrid, mailOptions, to, function(result)
-      {
-         if (result && okToSend)
-         {
-            sendEmail(sendgrid, mailOptions.fromAddress, to, subject, contenttype, text, function (err, response_body)
+        if (mailOptions.resetProvider)
+        {
+            console.log("Reset Provider: " + mailOptions.resetProvider);
+            mailOptions.link = await requestResetUrl(mailOptions.resetProvider, to);
+            if (mailOptions.link == "")
             {
-              if (err)
+              console.log("reset provider failed to generate link!!!");
+              okToSend = false;
+            }
+            console.log("Reset Url: " + mailOptions.link);
+        } else {
+          console.log("no reset provider!!!");
+        }
+        contenttype = "text/html";
+        text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
+        //console.log("Loaded custom password reset " + text);
+      }
+
+      return new Promise(function (resolve, reject) {
+        checkInvalidEmail(sendgrid, mailOptions, to, function(result)
+        {
+          if (result && okToSend)
+          {
+              sendEmail(sendgrid, mailOptions.fromAddress, to, subject, contenttype, text, function (err, response_body)
               {
-                console.log("parse-server-sendgrid-adapter: Error Sending " + err + " " + response_body);
-                reject(err);
-              } else {
-                console.log("parse-server-sendgrid-adapter: Email sent to " + to);
-              }
-              resolve({ "response": response_body });
-            });
-         } else {
-            console.log("parse-server-sendgrid-adapter: Email not sent to " + to);
-            resolve({ "response": "Email not sent to " + to });
-         }
-       });
-    });
+                if (err)
+                {
+                  console.log("parse-server-sendgrid-adapter: Error Sending " + err + " " + response_body);
+                  reject(err);
+                } else {
+                  console.log("parse-server-sendgrid-adapter: Email sent to " + to);
+                }
+                resolve({ "response": response_body });
+              });
+          } else {
+              console.log("parse-server-sendgrid-adapter: Email not sent to " + to);
+              resolve({ "response": "Email not sent to " + to });
+          }
+        });
+      });
+    } else {
+      return new Promise(function (resolve, reject) {
+        resolve({ "response": "Email not sent to " + to });
+      });
+    }
   };
 
   return Object.freeze({
