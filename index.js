@@ -209,8 +209,9 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
         const url = match ? match[0] : null;
         if (url != null)
         {
-            text = fillVariables(fs.readFileSync(emailVerifyPath)+'', mailOptions);
-            contenttype = "text/html";
+          mailOptions.link = url;
+          text = fillVariables(fs.readFileSync(emailVerifyPath)+'', mailOptions);
+          contenttype = "text/html";
         }
         //console.log("Loaded custom password reset " + text);
       }
