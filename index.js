@@ -180,6 +180,8 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
       var contenttype = 'text/plain';
       console.log("Sending Email to " + to + " with subject: " + subject);
       var pwResetPath = "templates/password_reset_email.html";
+      var emailVerifyPath = "templates/verify_email.html";
+
       if (subject.startsWith("Password") && fs.existsSync(pwResetPath))
       {
         if (mailOptions.resetProvider)
@@ -199,6 +201,14 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
         text = fillVariables(fs.readFileSync(pwResetPath)+'', mailOptions);
         //console.log("Loaded custom password reset " + text);
       }
+
+      if (subject.startsWith("Please verify your e-mail") && fs.existsSync(emailVerifyPath))
+      {
+        contenttype = "text/html";
+        text = fillVariables(fs.readFileSync(emailVerifyPath)+'', mailOptions);
+        //console.log("Loaded custom password reset " + text);
+      }
+      
 
       return new Promise(function (resolve, reject) {
         checkInvalidEmail(sendgrid, mailOptions, to, function(result)
