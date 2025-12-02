@@ -174,6 +174,7 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
     var to = _ref.to;
     var subject = _ref.subject;
     var text = _ref.text;
+    //console.log(_ref);
     var okToSend = true;
     if (!to.startsWith("deleted."))
     {
@@ -204,8 +205,13 @@ var SimpleSendGridAdapter = function SimpleSendGridAdapter(mailOptions) {
 
       if (subject.startsWith("Please verify your e-mail") && fs.existsSync(emailVerifyPath))
       {
-        contenttype = "text/html";
-        text = fillVariables(fs.readFileSync(emailVerifyPath)+'', mailOptions);
+        const match = text.match(/https?:\/\/[^\s]+/);
+        const url = match ? match[0] : null;
+        if (url != null)
+        {
+            text = fillVariables(fs.readFileSync(emailVerifyPath)+'', mailOptions);
+            contenttype = "text/html";
+        }
         //console.log("Loaded custom password reset " + text);
       }
       
